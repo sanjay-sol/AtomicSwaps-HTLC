@@ -7,7 +7,28 @@ interface IERC20 {
      // function allowance(address owner, address spender) external view returns (uint256);
 }
 
+
 contract HTLC {
+
+    mapping(bytes32 => LockContract) public contracts;
+
+    uint256 public constant INVALID = 0;
+    uint256 public constant ACTIVE = 1; 
+    uint256 public constant REFUNDED = 2; 
+    uint256 public constant WITHDRAWN = 3;
+    uint256 public constant EXPIRED = 4; 
+
+    struct LockContract {
+        uint256 inputAmount;
+        uint256 outputAmount;
+        uint256 expiration;
+        uint256 status;
+        bytes32 hashLock;
+        address payable sender;
+        address payable receiver;
+        string outputNetwork;
+        string outputAddress;
+    }
     uint public startTime;
     uint public lockTime = 10000 seconds;
     string public secret; // abcdefgh
