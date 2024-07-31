@@ -1,22 +1,16 @@
 //SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-interface IERC20 {
-     function transfer(address to, uint256 value) external returns (bool);
-     function transferFrom(address from, address to, uint256 value) external returns (bool);
-     // function allowance(address owner, address spender) external view returns (uint256);
-}
-
-
-contract HTLC {
+contract HashTimeLock {
 
     mapping(bytes32 => LockContract) public contracts;
 
-    uint256 public constant INVALID = 0;
-    uint256 public constant ACTIVE = 1; 
-    uint256 public constant REFUNDED = 2; 
-    uint256 public constant WITHDRAWN = 3;
-    uint256 public constant EXPIRED = 4; 
+
+    uint256 public constant INVALID = 0; // Uninitialized  swap -> can go to ACTIVE
+    uint256 public constant ACTIVE = 1; // Active swap -> can go to WITHDRAWN or EXPIRED
+    uint256 public constant REFUNDED = 2; // Swap is refunded -> final state.
+    uint256 public constant WITHDRAWN = 3; // Swap is withdrawn -> final state.
+    uint256 public constant EXPIRED = 4; // Swap is expired -> can go to REFUNDED
 
     struct LockContract {
         uint256 inputAmount;
@@ -29,37 +23,130 @@ contract HTLC {
         string outputNetwork;
         string outputAddress;
     }
-    uint public startTime;
-    uint public lockTime = 10000 seconds;
-    string public secret; // abcdefgh
-    bytes32 public hash =  0x48624fa43c68d5c552855a4e2919e74645f683f5384f72b5b051b71ea41d4f2d;
-    address public recipient;
-    address public owner;
-    uint public amount;
-    IERC20 public token;
 
-    constructor(address _recipient, address _token, uint _amount) {
-        recipient = _recipient;
-        owner = msg.sender;
-        amount = _amount;
-        token = IERC20(_token);
+    event Withdraw(
+        bytes32 indexed id,
+        bytes32 secret,
+        bytes32 hashLock,
+        address indexed sender,
+        address indexed receiver
+    );
+
+    event Refund(
+        bytes32 indexed id,
+        bytes32 hashLock,
+        address indexed sender,
+        address indexed receiver
+    );
+
+    event NewContract(
+        uint256 inputAmount,
+        uint256 outputAmount,
+        uint256 expiration,
+        bytes32 indexed id,
+        bytes32 hashLock,
+        address indexed sender,
+        address indexed receiver,
+        string outputNetwork,
+        string outputAddress
+    );
+
+    function newContract(
+        uint256 outputAmount,
+        uint256 expiration,
+        bytes32 hashLock,
+        address payable receiver,
+        string calldata outputNetwork,
+        string calldata outputAddress
+    ) external payable {
+        address payable sender = msg.sender;
+        uint256 inputAmount = msg.value;
+
+        require(expiration > block.timestamp, 'INVALID_TIME');
+
+        require(inputAmount > 0, 'INVALID_AMOUNT');
+
+        bytes32 id = sha256(
+            abi.encodePacked(sender, receiver, inputAmount, hashLock, expiration)
+        );
+
+        require(contracts[id].status == INVALID, "SWAP_EXISTS");
+
+        contracts[id] = LockContract(
+            inputAmount,
+            outputAmount,
+            expiration,
+            ACTIVE,
+            hashLock,
+            sender,
+            receiver,
+            outputNetwork,
+            outputAddress
+        );
+
+        emit NewContract(
+            inputAmount,
+            outputAmount,
+            expiration,
+            id,
+            hashLock,
+            sender,
+            receiver,
+            outputNetwork,
+            outputAddress
+        );
     }
 
-    function fund() external {
-        startTime = block.timestamp;
-        token.transferFrom(msg.sender, address(this), amount);
+    function withdraw(bytes32 id, bytes32 secret) external {
+        LockContract storage c = contracts[id];
+
+        require(c.status == ACTIVE, "SWAP_NOT_ACTIVE");
+
+        require(c.expiration > block.timestamp, "INVALID_TIME");
+
+        require(c.hashLock == sha256(abi.encodePacked(secret)),"INVALID_SECRET");
+
+        c.status = WITHDRAWN;
+
+        c.receiver.transfer(c.inputAmount);
+
+        emit Withdraw(id, secret, c.hashLock, c.sender, c.receiver);
     }
 
-    function withdraw(string memory _secret) external  {
-        require(keccak256(abi.encodePacked(_secret)) == hash, "wrong secret");
-        secret = _secret;
-        token.transfer(recipient, amount);
+    function refund(bytes32 id) external {
+        LockContract storage c = contracts[id];
+
+        require(c.status == ACTIVE, "SWAP_NOT_ACTIVE");
+
+        require(c.expiration <= block.timestamp, "INVALID_TIME");
+
+        c.status = REFUNDED;
+
+        c.sender.transfer(c.inputAmount);
+
+        emit Refund(id, c.hashLock, c.sender, c.receiver);
     }
 
-    function refund() external {
-        require(block.timestamp > startTime + lockTime, "too early");
-        token.transfer(owner, amount);
+    function getStatus(bytes32[] memory ids) public view returns (uint256[] memory) {
+        uint256[] memory result = new uint256[](ids.length);
+
+        for (uint256 index = 0; index < ids.length; index++) {
+            result[index] = getSingleStatus(ids[index]);
+        }
+
+        return result;
     }
 
+    function getSingleStatus(bytes32 id) public view returns (uint256 result) {
+        LockContract memory tempContract = contracts[id];
 
- }
+        if (
+            tempContract.status == ACTIVE &&
+            tempContract.expiration < block.timestamp
+        ) {
+            result = EXPIRED;
+        } else {
+            result = tempContract.status;
+        }
+    }
+}
