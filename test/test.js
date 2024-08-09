@@ -1,5 +1,3 @@
-// test smart contract
-
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
 
@@ -41,6 +39,10 @@ describe("HTLC", function () {
     it("should not withdraw with an incorrect secret", async function () {
         const secret = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("incorrect"));
         await expect(htlc.connect(alice).withdraw(secret)).to.be.revertedWith("HTLC: invalid secret");
+    });
+
+    it("should not withdraw with the correct secret before the timeout", async function () {
+        await expect(htlc.connect(alice).withdraw(hash)).to.be.revertedWith("HTLC: timeout not reached");
     });
     
     it("should withdraw with the correct secret", async function () {
