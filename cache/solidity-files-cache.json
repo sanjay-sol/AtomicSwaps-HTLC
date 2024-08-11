@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/sanjaysirangi/Documents/Desktop/Desktop/htlc-atomic-swaps/contracts/HTLC.sol": {
-      "lastModificationDate": 1722065237278,
-      "contentHash": "ff07c1ca364db46faa8f9aa48797acae",
+      "lastModificationDate": 1722765918420,
+      "contentHash": "05dde7f94ff5a96afbbed56641379552",
       "sourceName": "contracts/HTLC.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -34,8 +34,7 @@
         "^0.8.0"
       ],
       "artifacts": [
-        "HTLC",
-        "IERC20"
+        "HashTimeLock"
       ]
     },
     "/Users/sanjaysirangi/Documents/Desktop/Desktop/htlc-atomic-swaps/contracts/Token.sol": {
