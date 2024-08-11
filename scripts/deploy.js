@@ -30,6 +30,8 @@ async function main() {
     await tokenB.deployed();
     console.log("Token B deployed to:", tokenB.address);
 
+
+
     // Deploy HTLC for Alice to Bob on Binance Testnet
     const HTLC = await ethers.getContractFactory("HTLC");
     const htlcB = await HTLC.deploy(bob.address, tokenB.address, 1);

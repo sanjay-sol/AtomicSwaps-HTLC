@@ -18,6 +18,11 @@ async function main() {
   const contractHash = await htlc.hash();
   console.log("Hash stored in contract:", contractHash);
 
+    const timeout = await htlc.timeout();
+    console.log("Timeout:", timeout.toString());
+
+    
+
   if (hash !== contractHash) {
     console.error("Provided secret does not match the stored hash.");
     return;
