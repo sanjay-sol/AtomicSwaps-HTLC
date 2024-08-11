@@ -9,8 +9,8 @@ This project demonstrates a cross-chain atomic swap using Hash Time-Locked Contr
   - [Project Overview](#project-overview)
     - [Key Components:](#key-components)
   - [Architecture Diagrams](#architecture-diagrams)
-    - [1. Detailed Process Flow](#1-detailed-process-flow)
-    - [2. Simplified Overview](#2-simplified-overview)
+    - [1. Simplified Overview](#1-simplified-overview)
+    - [2. Detailed Process Flow](#2-detailed-process-flow)
   - [How It Works](#how-it-works)
     - [Contract Creation](#contract-creation)
     - [Token Locking](#token-locking)
@@ -46,18 +46,22 @@ Atomic swaps are a method of exchanging cryptocurrencies between two different b
 
 ## Architecture Diagrams
 
-### 1. Detailed Process Flow
-![Screenshot 2024-08-12 at 3 07 19 AM](https://github.com/user-attachments/assets/2f018d49-89fd-4e0c-8bb2-e7bad0e182d3)
+
+
+### 1. Simplified Overview
+
+![simple_htlc](https://github.com/user-attachments/assets/1adc770d-3113-4718-9462-49fe30abd3a5)
+
+
+This diagram provides a simplified overview of the HTLC setup, focusing on the interactions between users, smart contracts, and the development tools.
+
+### 2. Detailed Process Flow
+
+![detailed_htlc](https://github.com/user-attachments/assets/09e6262a-934f-407d-810a-3ed208a3f725)
 
 
 
 This diagram illustrates the detailed process flow of the HTLC-based atomic swap between Sepolia and BNB networks, including the token locking, unlocking, and refund mechanisms.
-
-### 2. Simplified Overview
-
-![Screenshot 2024-08-12 at 3 03 49 AM](https://github.com/user-attachments/assets/282e7cd9-75b7-4cd0-9a22-7de39563b18b)
-
-This diagram provides a simplified overview of the HTLC setup, focusing on the interactions between users, smart contracts, and the development tools.
 
 ## How It Works
 
